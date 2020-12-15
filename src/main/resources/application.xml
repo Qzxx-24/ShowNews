@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <context:component-scan base-package="com.qxx">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!--    配置连接池-->
+    <bean class="com.mchange.v2.c3p0.ComboPooledDataSource" id="pooledDataSource">
+        <property name="jdbcUrl" value="${jdbc.url}"></property>
+        <property name="driverClass" value="${jdbc.className}"></property>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="maxPoolSize" value="1000"/>
+        <property name="minPoolSize" value="3"/>
+        <!--关闭连接后不自动commit-->
+        <property name="autoCommitOnClose" value="false"/>
+        <!--获取连接超时时间-->
+        <property name="checkoutTimeout" value="10000"/>
+        <!--当获取连接失败重试次数-->
+        <property name="acquireRetryAttempts" value="5"/>
+    </bean>
+<!--    配置sqlsessionfactory-->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="sqlSessionFactory">
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <property name="dataSource" ref="pooledDataSource"/>
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+        <!--配置mybatis 插件-->
+
+    </bean>
+
+
+<!--    扫描mapper文件-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.qxx.dao"/>
+    </bean>
+<!--    配置事务-->
+    <bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+        <property name="dataSource" ref="pooledDataSource"/>
+    </bean>
+    <aop:config>
+        <aop:pointcut id="txPoint" expression="execution(* com.qxx.service..*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPoint"/>
+    </aop:config>
+    <tx:advice id="txAdvice">
+        <tx:attributes>
+            <tx:method name="*"/>
+            <tx:method name="get*"/>
+        </tx:attributes>
+    </tx:advice>
+</beans>

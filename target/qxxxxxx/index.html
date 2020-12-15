@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="GB2312">
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <title>Title</title>
+</head>
+<style>
+    hr {
+        height: 2px;
+        border: none;
+        border-top: 2px solid darkred;
+    }
+
+    .topBtn {
+        background: #ffffff;
+        color: grey;
+        text-align: center;
+        width: 110px;
+        height: 30px;
+        margin-top: -9px;
+        border: none;
+        font-weight: bold;
+        font-size: 19px;
+    }
+
+    form {
+        border: solid 1px grey;
+    }
+    a{
+        text-decoration: none;
+        color: black;
+    }
+</style>
+<body>
+<div id="app">
+    <hr/>
+    <div>
+        <button class="topBtn" v-for="item in columnList[0]"  :id="item.id" @click="changeCss($event)">{{item.section}}</button>
+    </div>
+    <div>
+    <a v-for="item in columnList[-1]" :href="item.href" style="color: darkred;position: absolute;right: 15px;top: 10px;">+<span style="color: grey">{{item.section}}</span></a>
+    </div>
+
+    <form action="" >
+        <div style="display: inline-block;" v-for="item in sectionContentList[1]">
+
+            <img :src="item.imgSrc" alt="" style="height: 180px;width: 360px;"/>
+            <span style="font-weight:bold;float: right;width: 280px;">{{item.section}}</span>
+            <br/>
+            <span style="float: right;width: 280px;margin-top: -150px;padding-top: 5px;">{{item.summary}}<br/>
+            <a style="color:indianred;float: right;width: 280px;"  :href="item.href">[详细]</a>
+            </span>
+            <br/>
+
+        </div>
+        <div >
+            <a v-for="item in sectionContentList[2]" :href="item.href" style="display: inline-block;width: 650px;padding-top: 10px;">o&nbsp;{{item.section}}</a>
+        </div>
+    </form>
+    <!--    <span v-for="item in columnList[0]">{{item.section}}</span>-->
+    <!--    <span v-for="item in sectionContentList[1]">{{item.section}}</span>-->
+</div>
+</body>
+<script src="static/js/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            columnList: [],
+            sectionContentList: [],
+            id: 1
+        },
+        methods: {
+            getColumns() {
+                var that = this;
+                axios.get("getColumns.do").then(function (response) {
+                        console.log(response.data);
+                        that.columnList = response.data.extend.columnList;
+                    }
+                )
+            },
+            getContent() {
+                var that = this;
+                axios.get("getSection.do?id=" + that.id).then(function (response) {
+                    that.sectionContentList = response.data.extend.sectionContentList;
+                })
+            },
+            changeCss(e){
+                e= e.target;
+                var that =this;
+                that.id=e.id;
+                $(".topBtn").each(function (index,element) {
+                    if (that.id==element.id){
+                        $(element).css("background","darkred");
+                        $(element).css("color","#ffffff");
+                    }
+                    else{
+                        $(element).css("background","#ffffff");
+                        $(element).css("color","grey");
+                    }
+                })
+                that.getContent();
+            }
+        },
+        created() {
+            this.getColumns();
+            this.getContent();
+        }
+    })
+</script>
+</html>
